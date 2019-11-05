@@ -1,23 +1,58 @@
-import React from 'react';
-import { connect } from 'react-redux';
-import { reduxForm, FieldArray, Form } from 'redux-form';
-import { Button, Container, Row, Col } from 'reactstrap';
-import _map from 'lodash/map';
-import ReactJson from 'react-json-view';
+import React from "react";
+import { connect } from "react-redux";
+import { reduxForm, FieldArray, Form } from "redux-form";
+import { Button, Container, Row, Col } from "reactstrap";
+import _map from "lodash/map";
+import _ from "lodash";
+import ReactJson from "react-json-view";
+import moment from "moment";
 
-import { WEEK_DAYS } from '../common/constants';
-import {
-  clearReservations,
-  saveReservations,
-} from '../actions/machine';
-import SingleDayReservations from './SingleDayReservations';
-import './Reservations.scss';
+import { WEEK_DAYS } from "../common/constants";
+import { clearReservations, saveReservations } from "../actions/machine";
+import SingleDayReservations from "./SingleDayReservations";
+import "./Reservations.scss";
 
 const validate = values => {
-  const errors = {
-    // monday: [{ start: 'must be present' }],
-    //tuesday: { _error: 'error' },
-  };
+  let errors = {};
+
+  WEEK_DAYS.forEach(day => {
+    let dayArray = values[day];
+    let errArr = [];
+    dayArray.forEach((singleTask, index) => {
+      let start = moment(singleTask.start);
+      let end = moment(singleTask.end);
+      let allowToSecondStep = true;
+      if (!singleTask.start) {
+        errArr[index] = { ...errArr[index], start: "Can not be empty'" };
+        allowToSecondStep = false;
+      }
+      if (!singleTask.end) {
+        errArr[index] = { ...errArr[index], end: "Can not be empty'" };
+        allowToSecondStep = false;
+      }
+      if (moment(start).isAfter(end)) {
+        errArr[index] = {
+          ...errArr[index],
+          end: "End time should be after start time"
+        };
+        allowToSecondStep = false;
+      }
+      let moment150minutes = moment(start).add(150, "minutes");
+      if (moment(moment150minutes).isSameOrBefore(end)) {
+        errArr[index] = {
+          ...errArr[index],
+          end: "Reservation too long"
+        };
+        allowToSecondStep = false;
+      }
+      if (allowToSecondStep) {
+        _.reduce(dayArray, function(isColliding, start, end) {}, true);
+      } else {
+        console.log("second step not allowed");
+      }
+      errors[day] = errArr;
+    });
+  });
   return errors;
 };
 
@@ -25,7 +60,7 @@ const Reservations = ({
   clearReservations,
   handleSubmit,
   machine,
-  saveReservations,
+  saveReservations
 }) => (
   <Container className="reservations">
     <Form onSubmit={handleSubmit(saveReservations)}>
@@ -60,21 +95,21 @@ const Reservations = ({
 
 const mapStateToProps = state => ({
   machine: state.machine,
-  initialValues: state.machine,
+  initialValues: state.machine
 });
 
 const mapDispatchToProps = {
   clearReservations,
-  saveReservations,
+  saveReservations
 };
 
 export default connect(
   mapStateToProps,
-  mapDispatchToProps,
+  mapDispatchToProps
 )(
   reduxForm({
-    form: 'reservations',
+    form: "reservations",
     validate,
-    enableReinitialize: true,
-  })(Reservations),
+    enableReinitialize: true
+  })(Reservations)
 );

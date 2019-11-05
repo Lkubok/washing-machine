@@ -1,10 +1,7 @@
-import React from 'react';
-import DatePicker from 'react-datepicker';
+import React from "react";
+import DatePicker from "react-datepicker";
 
-const TimePickerWrapper = ({
-  input: { onChange, value },
-  meta: { error },
-}) => {
+const TimePickerWrapper = ({ input: { onChange, value }, meta: { error } }) => {
   console.log(error);
   return (
     <React.Fragment>
